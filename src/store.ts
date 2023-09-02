@@ -28,7 +28,7 @@ export default new Vuex.Store({
           items: new Array(),
       },
       {
-        label: "D",
+        label: "Dnnnn",
         color: "#654321",
           /* eslint-disable */
           items: new Array(),
