@@ -7,9 +7,9 @@
       class="droppable"
       @dragover.prevent
       @dragenter.prevent
-      :style="{ backgroundColor: category?.color }"
+      :style="{ backgroundColor: '#333' }"
     >
-      <div class="tier-label">
+      <div class="tier-label" :style="{ backgroundColor: category?.color }">
         <h3>{{ category.title }}</h3>
       </div>
       <div class="zone">
