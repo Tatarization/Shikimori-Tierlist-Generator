@@ -21,31 +21,57 @@
           Сгенерировать Тирлист
         </a-button>
       </div>
-      <TierList :user-info="userInfo" @set-user-info="onSetUserInfo" />
+      <div>
+        <a-row :gutter="[36, 30]">
+          <a-col span="20">
+            <TierList v-if="userInfo.length && filters" />
+          </a-col>
+          <a-col span="4">
+            <RightMenu
+              v-if="userInformation"
+              :avatar="userInformation.avatar"
+              :user-name="userInformation.userName"
+              @onSaveFilters="onSaveFilters"
+            />
+          </a-col>
+        </a-row>
+      </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, watch } from "vue";
 import { services } from "@/services/services";
 import { getCategoryId } from "@/utils/getCategoryId";
 import TierList from "@/components/TierList/TierList.vue";
-import { UserInfo } from "@/components/TierList/types";
+import { Tier, User, UserInfo } from "@/components/TierList/types";
 import { errorNotification } from "@/utils/errorNotification";
+import { categories } from "@/components/TierList/consts";
+import RightMenu from "@/components/RightMenu/RightMenu.vue";
 
 export default defineComponent({
   name: "HomeView",
-  components: { TierList },
+  components: { RightMenu, TierList },
   setup() {
+    const userInformation = ref<User>({ userId: 0, userName: "", avatar: "" });
     const userInfo = ref<UserInfo[]>([]);
+    const tiers = ref<Tier[]>(categories);
     const name = ref("");
+    const filters = ref({ list: "completed", type: ["tv"], rating: [] });
+
     const handleSearch = async () => {
       try {
         services
           .getUserIdByName(name.value)
-          .then(async (id) => {
-            userInfo.value = await services.getAnimeList(id);
+          .then(async (res) => {
+            userInformation.value = {
+              userId: res.id,
+              avatar: res.avatar,
+              userName: res.userName,
+            };
+            userInfo.value = await services.getAnimeList(res.id, filters.value);
+            tiers.value[8].items = userInfo.value;
           })
           .catch(() =>
             errorNotification("Введите корректное имя пользователя")
@@ -55,25 +81,56 @@ export default defineComponent({
       }
     };
 
-    const onSetUserInfo = (newUserInfo: UserInfo[]) => {
-      userInfo.value = newUserInfo;
+    const onSaveFilters = async (newFilters: any) => {
+      filters.value = newFilters;
     };
 
+    watch(
+      () => [
+        filters.value.list,
+        filters.value.type.length,
+        filters.value.rating.length,
+      ],
+      async () => {
+        userInfo.value = await services.getAnimeList(
+          userInformation.value.userId,
+          filters.value
+        );
+        tiers.value[8].items = userInfo.value;
+      }
+    );
+
     const generateTierList = () => {
-      userInfo.value = userInfo.value.map((elem: any) => ({
+      userInfo.value = userInfo.value.map((elem: UserInfo) => ({
         ...elem,
         categoryId: getCategoryId(elem.score),
       }));
-      console.log(userInfo.value);
+      const tiersItems = Object.values(
+        userInfo.value.reduce((acc: any, value: UserInfo) => {
+          const categoryId = value.categoryId;
+          acc[categoryId] ??= [];
+          acc[categoryId].push({ ...value });
+          return acc;
+        }, {})
+      );
+      for (let i = 0; i <= 8; i++) {
+        if (!tiersItems[i]) {
+          console.log(tiers.value[i]);
+          tiers.value[i].items = new Array(0);
+        }
+        tiers.value[i].items = tiersItems[i] as any;
+      }
+      tiers.value[8].items = new Array(0);
     };
 
     return {
-      //script setup
-      onSetUserInfo,
       name,
       handleSearch,
       userInfo,
       generateTierList,
+      userInformation,
+      onSaveFilters,
+      filters,
     };
   },
 });

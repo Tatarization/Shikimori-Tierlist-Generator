@@ -14,3 +14,9 @@ export type Tier = {
   title: string;
   items: UserInfo[];
 };
+
+export type User = {
+  userId: number;
+  avatar: string;
+  userName: string;
+};
