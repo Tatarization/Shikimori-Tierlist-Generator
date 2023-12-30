@@ -2,24 +2,39 @@
   <div>
     <div>
       <div class="top-content">
-        <h2 class="title">Shikimori Tierlist Generator</h2>
-        <a-input
-          class="input"
-          type="text"
-          required="required"
-          :value="name"
-          @input="name = $event.target.value"
-        />
-        <a-button class="btn" v-on:click="handleSearch" :disabled="name === ''">
-          Поиск
-        </a-button>
-        <a-button
-          class="btn"
-          v-on:click="generateTierList"
-          :disabled="name === ''"
-        >
-          Сгенерировать Тирлист
-        </a-button>
+        <a-row :gutter="[24, 10]">
+          <a-col span="24">
+            <h2 class="title">Shikimori Tierlist Generator</h2>
+          </a-col>
+          <a-col span="8">
+            <a-input
+              class="input"
+              type="text"
+              required="required"
+              :value="name"
+              @input="name = $event.target.value"
+            />
+          </a-col>
+          <a-col span="7">
+            <a-button
+              class="btn"
+              v-on:click="handleSearch"
+              :disabled="name === ''"
+            >
+              Поиск
+            </a-button>
+            <a-button
+              class="btn"
+              v-on:click="generateTierList"
+              :disabled="name === ''"
+            >
+              Сгенерировать Тирлист
+            </a-button>
+            <a-button class="btn" v-on:click="onReset" :disabled="name === ''">
+              Очистить
+            </a-button>
+          </a-col>
+        </a-row>
       </div>
       <div>
         <a-row :gutter="[36, 30]">
@@ -60,22 +75,21 @@ export default defineComponent({
     const name = ref("");
     const filters = ref({ list: "completed", type: ["tv"], rating: [] });
 
+    const onReset = () => {
+      for (let i = 0; i <= 8; i++) {
+        tiers.value[i].items = new Array(0);
+      }
+    };
+
     const handleSearch = async () => {
+      onReset();
       try {
-        services
-          .getUserIdByName(name.value)
-          .then(async (res) => {
-            userInformation.value = {
-              userId: res.id,
-              avatar: res.avatar,
-              userName: res.userName,
-            };
-            userInfo.value = await services.getAnimeList(res.id, filters.value);
-            tiers.value[8].items = userInfo.value;
-          })
-          .catch(() =>
-            errorNotification("Введите корректное имя пользователя")
-          );
+        userInformation.value = await services.getUserIdByName(name.value);
+        userInfo.value = await services.getAnimeList(
+          userInformation.value.userId,
+          filters.value
+        );
+        tiers.value[8].items = userInfo.value;
       } catch {
         errorNotification("Ошибка при загрузке данных пользователя");
       }
@@ -101,6 +115,7 @@ export default defineComponent({
     );
 
     const generateTierList = () => {
+      onReset();
       userInfo.value = userInfo.value.map((elem: UserInfo) => ({
         ...elem,
         categoryId: getCategoryId(elem.score),
@@ -128,6 +143,7 @@ export default defineComponent({
       handleSearch,
       userInfo,
       generateTierList,
+      onReset,
       userInformation,
       onSaveFilters,
       filters,
@@ -139,6 +155,10 @@ export default defineComponent({
 <style>
 .top-content {
   margin-bottom: 10px;
+}
+
+.btn {
+  margin-left: 8px;
 }
 
 .tier-label h3 {

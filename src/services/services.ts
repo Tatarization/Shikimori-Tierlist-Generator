@@ -1,11 +1,11 @@
 import axios from "axios";
 
-const baseUrl = "https://shikimori.me/api";
+const baseUrl = "https://shikimori.one/api";
 
 const getUserIdByName = async (name: string) => {
   const response = await axios.get(`${baseUrl}/users/${name}`);
   return {
-    id: response.data.id,
+    userId: response.data.id,
     avatar: response.data.image.x160,
     userName: response.data.nickname,
   };

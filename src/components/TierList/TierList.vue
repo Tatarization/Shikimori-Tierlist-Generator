@@ -17,8 +17,8 @@
               :src="element.url"
               :alt="element.name"
               :title="element.name"
-              width="100"
-              height="100"
+              width="120"
+              height="170"
             />
           </div>
         </template>
@@ -82,6 +82,6 @@ export default defineComponent({
   padding: 5px 5px 2px;
   border-radius: 5px;
   margin: 3px 5px 5px;
-  width: 110px;
+  width: 130px;
 }
 </style>
